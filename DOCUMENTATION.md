@@ -346,32 +346,5 @@ Contributions are welcome! Please follow these steps:
 - Add appropriate error handling
 - Update documentation for new features
 
-## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👤 Author
-
-**Your Name**
-- GitHub: [ashk645](https://github.com/ashk6645)
-- LinkedIn: [Ashutosh Pratap Singh](https://linkedin.com/in/ashk6645)
-- Email: ashk6645@gmail.com
-
-## 🙏 Acknowledgments
-
-- [Supabase](https://supabase.com) for the excellent backend platform
-- [shadcn/ui](https://ui.shadcn.com) for the beautiful component library
-- [Tailwind CSS](https://tailwindcss.com) for the utility-first CSS framework
-- [Lucide](https://lucide.dev) for the comprehensive icon library
-
----
-
-<div align="center">
-  <p>Built using modern web technologies</p>
-  <p>
-    <a href="https://job-application-tracker-mini-crm.vercel.app/">🌐 Live Demo</a> •
-    <a href="https://github.com/ashk6645/Job-Application-Tracker-Mini-CRM-">📁 Source Code</a> •
-    <a href="mailto:ashk6645@gmail.com">📧 Contact</a>
-  </p>
-</div>
 
