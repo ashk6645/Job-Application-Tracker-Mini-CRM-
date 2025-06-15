@@ -5,7 +5,8 @@ A comprehensive full-stack web application built with modern technologies to hel
 
 ## 🌟 Live Demo
 
-**URL**: [https://lovable.dev/projects/90e10fb1-238b-4a03-93b6-130efde68e7b](https://lovable.dev/projects/90e10fb1-238b-4a03-93b6-130efde68e7b)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20App-blue?style=for-the-badge)](https://job-application-tracker-mini-crm.vercel.app/auth)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/ashk6645/Job-Application-Tracker-Mini-CRM-)
 
 ## 📋 Table of Contents
 
