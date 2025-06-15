@@ -1,6 +1,5 @@
-
 import { useState, useMemo } from 'react';
-import { Plus, Filter, Search, Calendar, Building, MapPin, DollarSign } from 'lucide-react';
+import { Plus, Filter, Search, Calendar, Building, MapPin, DollarSign, BarChart3, Bell, Download, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -9,7 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
+import { JobApplicationModal } from '@/components/JobApplicationModal';
+import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
+import { ReminderSystem } from '@/components/ReminderSystem';
+import { ExportData } from '@/components/ExportData';
 
 type JobStatus = 'Applied' | 'Interview' | 'Offer' | 'Rejected' | 'Accepted';
 
@@ -23,9 +27,12 @@ interface JobApplication {
   location?: string;
   salary?: string;
   type?: string;
+  contactPerson?: string;
+  followUpDate?: string;
+  jobUrl?: string;
 }
 
-// Mock data for demonstration
+// Enhanced mock data
 const mockJobs: JobApplication[] = [
   {
     id: '1',
@@ -36,7 +43,10 @@ const mockJobs: JobApplication[] = [
     notes: 'Applied through careers page. Technical interview scheduled for next week.',
     location: 'Mountain View, CA',
     salary: '$120,000 - $180,000',
-    type: 'Full-time'
+    type: 'Full-time',
+    contactPerson: 'Sarah Johnson - Technical Recruiter',
+    followUpDate: '2024-06-20',
+    jobUrl: 'https://careers.google.com/jobs/frontend-dev'
   },
   {
     id: '2',
@@ -47,7 +57,9 @@ const mockJobs: JobApplication[] = [
     notes: 'LinkedIn application. Waiting for response.',
     location: 'Seattle, WA',
     salary: '$110,000 - $160,000',
-    type: 'Full-time'
+    type: 'Full-time',
+    contactPerson: 'Mike Chen - Hiring Manager',
+    followUpDate: '2024-06-18'
   },
   {
     id: '3',
@@ -58,7 +70,8 @@ const mockJobs: JobApplication[] = [
     notes: 'Great interview process. Offer received!',
     location: 'Menlo Park, CA',
     salary: '$130,000 - $190,000',
-    type: 'Full-time'
+    type: 'Full-time',
+    contactPerson: 'Lisa Park - Senior Recruiter'
   },
   {
     id: '4',
@@ -70,6 +83,18 @@ const mockJobs: JobApplication[] = [
     location: 'Austin, TX',
     salary: '$100,000 - $150,000',
     type: 'Full-time'
+  },
+  {
+    id: '5',
+    company: 'Apple',
+    role: 'iOS Developer',
+    status: 'Applied',
+    appliedDate: '2024-05-25',
+    notes: 'Applied through company website. No response yet.',
+    location: 'Cupertino, CA',
+    salary: '$140,000 - $200,000',
+    type: 'Full-time',
+    followUpDate: '2024-06-15'
   }
 ];
 
@@ -79,6 +104,10 @@ const Index = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('date-desc');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<JobApplication | null>(null);
+  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
+  const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
 
   // New job form state
@@ -90,7 +119,10 @@ const Index = () => {
     notes: '',
     location: '',
     salary: '',
-    type: 'Full-time'
+    type: 'Full-time',
+    contactPerson: '',
+    followUpDate: '',
+    jobUrl: ''
   });
 
   const statusColors = {
@@ -151,7 +183,10 @@ const Index = () => {
       notes: '',
       location: '',
       salary: '',
-      type: 'Full-time'
+      type: 'Full-time',
+      contactPerson: '',
+      followUpDate: '',
+      jobUrl: ''
     });
     setIsAddDialogOpen(false);
     
@@ -159,6 +194,20 @@ const Index = () => {
       title: "Success!",
       description: "Job application added successfully."
     });
+  };
+
+  const handleUpdateJob = (updatedJob: JobApplication) => {
+    setJobs(jobs.map(job => job.id === updatedJob.id ? updatedJob : job));
+  };
+
+  const handleDeleteJob = (jobId: string) => {
+    setJobs(jobs.filter(job => job.id !== jobId));
+  };
+
+  const handleViewJob = (job: JobApplication) => {
+    setSelectedJob(job);
+    setModalMode('view');
+    setIsJobModalOpen(true);
   };
 
   const getStatusStats = () => {
@@ -180,262 +229,463 @@ const Index = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Application Tracker</h1>
-          <p className="text-gray-600">Manage and track your job applications in one place</p>
+          <p className="text-gray-600">Manage and track your job applications with advanced analytics</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
-              <div className="text-sm text-gray-600">Total Applications</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-blue-500">{stats.applied}</div>
-              <div className="text-sm text-gray-600">Applied</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-yellow-500">{stats.interview}</div>
-              <div className="text-sm text-gray-600">Interviews</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-green-500">{stats.offer}</div>
-              <div className="text-sm text-gray-600">Offers</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-purple-500">{stats.accepted}</div>
-              <div className="text-sm text-gray-600">Accepted</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-2xl font-bold text-red-500">{stats.rejected}</div>
-              <div className="text-sm text-gray-600">Rejected</div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Navigation Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="analytics">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="reminders">
+              <Bell className="h-4 w-4 mr-2" />
+              Reminders
+            </TabsTrigger>
+            <TabsTrigger value="export">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+            </TabsTrigger>
+            <TabsTrigger value="applications">Applications</TabsTrigger>
+          </TabsList>
 
-        {/* Controls */}
-        <div className="flex flex-col md:flex-row gap-4 mb-8 bg-white p-4 rounded-lg shadow-sm">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search companies or roles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          <TabsContent value="overview" className="space-y-8">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+                  <div className="text-sm text-gray-600">Total Applications</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-blue-500">{stats.applied}</div>
+                  <div className="text-sm text-gray-600">Applied</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-yellow-500">{stats.interview}</div>
+                  <div className="text-sm text-gray-600">Interviews</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-green-500">{stats.offer}</div>
+                  <div className="text-sm text-gray-600">Offers</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-purple-500">{stats.accepted}</div>
+                  <div className="text-sm text-gray-600">Accepted</div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="text-2xl font-bold text-red-500">{stats.rejected}</div>
+                  <div className="text-sm text-gray-600">Rejected</div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
-          
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full md:w-40">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Applied">Applied</SelectItem>
-              <SelectItem value="Interview">Interview</SelectItem>
-              <SelectItem value="Offer">Offer</SelectItem>
-              <SelectItem value="Rejected">Rejected</SelectItem>
-              <SelectItem value="Accepted">Accepted</SelectItem>
-            </SelectContent>
-          </Select>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-full md:w-40">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="date-desc">Newest First</SelectItem>
-              <SelectItem value="date-asc">Oldest First</SelectItem>
-              <SelectItem value="company">Company A-Z</SelectItem>
-              <SelectItem value="status">Status</SelectItem>
-            </SelectContent>
-          </Select>
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ReminderSystem jobs={jobs} onUpdateJob={handleUpdateJob} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Quick Actions</CardTitle>
+                  <CardDescription>Common tasks and shortcuts</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setIsAddDialogOpen(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add New Application
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setActiveTab('analytics')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-2" />
+                    View Analytics
+                  </Button>
+                  <Button 
+                    className="w-full justify-start" 
+                    variant="outline"
+                    onClick={() => setActiveTab('export')}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Data
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
 
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Application
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Add New Job Application</DialogTitle>
-                <DialogDescription>
-                  Fill in the details for your new job application.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="company">Company *</Label>
-                    <Input
-                      id="company"
-                      value={newJob.company}
-                      onChange={(e) => setNewJob({...newJob, company: e.target.value})}
-                      placeholder="Google"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="role">Role *</Label>
-                    <Input
-                      id="role"
-                      value={newJob.role}
-                      onChange={(e) => setNewJob({...newJob, role: e.target.value})}
-                      placeholder="Software Engineer"
-                    />
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="status">Status</Label>
-                    <Select value={newJob.status} onValueChange={(value: JobStatus) => setNewJob({...newJob, status: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Applied">Applied</SelectItem>
-                        <SelectItem value="Interview">Interview</SelectItem>
-                        <SelectItem value="Offer">Offer</SelectItem>
-                        <SelectItem value="Rejected">Rejected</SelectItem>
-                        <SelectItem value="Accepted">Accepted</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="appliedDate">Applied Date</Label>
-                    <Input
-                      id="appliedDate"
-                      type="date"
-                      value={newJob.appliedDate}
-                      onChange={(e) => setNewJob({...newJob, appliedDate: e.target.value})}
-                    />
-                  </div>
-                </div>
+          <TabsContent value="analytics">
+            <AnalyticsDashboard jobs={jobs} />
+          </TabsContent>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={newJob.location}
-                      onChange={(e) => setNewJob({...newJob, location: e.target.value})}
-                      placeholder="San Francisco, CA"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="salary">Salary Range</Label>
-                    <Input
-                      id="salary"
-                      value={newJob.salary}
-                      onChange={(e) => setNewJob({...newJob, salary: e.target.value})}
-                      placeholder="$120,000 - $180,000"
-                    />
-                  </div>
-                </div>
+          <TabsContent value="reminders">
+            <ReminderSystem jobs={jobs} onUpdateJob={handleUpdateJob} />
+          </TabsContent>
 
-                <div>
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={newJob.notes}
-                    onChange={(e) => setNewJob({...newJob, notes: e.target.value})}
-                    placeholder="Add any notes about this application..."
-                    rows={3}
+          <TabsContent value="export">
+            <ExportData jobs={jobs} />
+          </TabsContent>
+
+          <TabsContent value="applications" className="space-y-8">
+            {/* Controls */}
+            <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-lg shadow-sm">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search companies or roles..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
                   />
                 </div>
+              </div>
+              
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-40">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Applied">Applied</SelectItem>
+                  <SelectItem value="Interview">Interview</SelectItem>
+                  <SelectItem value="Offer">Offer</SelectItem>
+                  <SelectItem value="Rejected">Rejected</SelectItem>
+                  <SelectItem value="Accepted">Accepted</SelectItem>
+                </SelectContent>
+              </Select>
 
-                <div className="flex gap-2 pt-4">
-                  <Button onClick={handleAddJob} className="flex-1">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date-desc">Newest First</SelectItem>
+                  <SelectItem value="date-asc">Oldest First</SelectItem>
+                  <SelectItem value="company">Company A-Z</SelectItem>
+                  <SelectItem value="status">Status</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="h-4 w-4 mr-2" />
                     Add Application
                   </Button>
-                  <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                    Cancel
-                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add New Job Application</DialogTitle>
+                    <DialogDescription>
+                      Fill in the details for your new job application.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="company">Company *</Label>
+                        <Input
+                          id="company"
+                          value={newJob.company}
+                          onChange={(e) => setNewJob({...newJob, company: e.target.value})}
+                          placeholder="Google"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="role">Role *</Label>
+                        <Input
+                          id="role"
+                          value={newJob.role}
+                          onChange={(e) => setNewJob({...newJob, role: e.target.value})}
+                          placeholder="Software Engineer"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="status">Status</Label>
+                        <Select value={newJob.status} onValueChange={(value: JobStatus) => setNewJob({...newJob, status: value})}>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Applied">Applied</SelectItem>
+                            <SelectItem value="Interview">Interview</SelectItem>
+                            <SelectItem value="Offer">Offer</SelectItem>
+                            <SelectItem value="Rejected">Rejected</SelectItem>
+                            <SelectItem value="Accepted">Accepted</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="appliedDate">Applied Date</Label>
+                        <Input
+                          id="appliedDate"
+                          type="date"
+                          value={newJob.appliedDate}
+                          onChange={(e) => setNewJob({...newJob, appliedDate: e.target.value})}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="location">Location</Label>
+                        <Input
+                          id="location"
+                          value={newJob.location}
+                          onChange={(e) => setNewJob({...newJob, location: e.target.value})}
+                          placeholder="San Francisco, CA"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="salary">Salary Range</Label>
+                        <Input
+                          id="salary"
+                          value={newJob.salary}
+                          onChange={(e) => setNewJob({...newJob, salary: e.target.value})}
+                          placeholder="$120,000 - $180,000"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="notes">Notes</Label>
+                      <Textarea
+                        id="notes"
+                        value={newJob.notes}
+                        onChange={(e) => setNewJob({...newJob, notes: e.target.value})}
+                        placeholder="Add any notes about this application..."
+                        rows={3}
+                      />
+                    </div>
+
+                    <div className="flex gap-2 pt-4">
+                      <Button onClick={handleAddJob} className="flex-1">
+                        Add Application
+                      </Button>
+                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Job Applications Grid */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {filteredAndSortedJobs.map((job) => (
+                <Card key={job.id} className="hover:shadow-lg transition-shadow duration-200 cursor-pointer">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold text-gray-900">
+                          {job.role}
+                        </CardTitle>
+                        <CardDescription className="flex items-center text-gray-600 mt-1">
+                          <Building className="h-4 w-4 mr-1" />
+                          {job.company}
+                        </CardDescription>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge className={`${statusColors[job.status]} border`}>
+                          {job.status}
+                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleViewJob(job)}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          View
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Applied: {new Date(job.appliedDate).toLocaleDateString()}
+                    </div>
+                    
+                    {job.location && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        {job.location}
+                      </div>
+                    )}
+                    
+                    {job.salary && (
+                      <div className="flex items-center text-sm text-gray-600">
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        {job.salary}
+                      </div>
+                    )}
+                    
+                    {job.notes && (
+                      <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md">
+                        {job.notes}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {filteredAndSortedJobs.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">
+                  <Building className="h-12 w-12 mx-auto" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No applications found</h3>
+                <p className="text-gray-600">
+                  {searchQuery || statusFilter !== 'all' 
+                    ? 'Try adjusting your search or filter criteria.'
+                    : 'Get started by adding your first job application!'
+                  }
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+
+        {/* Add Job Dialog */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Application
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Job Application</DialogTitle>
+              <DialogDescription>
+                Fill in the details for your new job application.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="company">Company *</Label>
+                  <Input
+                    id="company"
+                    value={newJob.company}
+                    onChange={(e) => setNewJob({...newJob, company: e.target.value})}
+                    placeholder="Google"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="role">Role *</Label>
+                  <Input
+                    id="role"
+                    value={newJob.role}
+                    onChange={(e) => setNewJob({...newJob, role: e.target.value})}
+                    placeholder="Software Engineer"
+                  />
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Job Applications Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredAndSortedJobs.map((job) => (
-            <Card key={job.id} className="hover:shadow-lg transition-shadow duration-200 cursor-pointer">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg font-semibold text-gray-900">
-                      {job.role}
-                    </CardTitle>
-                    <CardDescription className="flex items-center text-gray-600 mt-1">
-                      <Building className="h-4 w-4 mr-1" />
-                      {job.company}
-                    </CardDescription>
-                  </div>
-                  <Badge className={`${statusColors[job.status]} border`}>
-                    {job.status}
-                  </Badge>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={newJob.status} onValueChange={(value: JobStatus) => setNewJob({...newJob, status: value})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Applied">Applied</SelectItem>
+                      <SelectItem value="Interview">Interview</SelectItem>
+                      <SelectItem value="Offer">Offer</SelectItem>
+                      <SelectItem value="Rejected">Rejected</SelectItem>
+                      <SelectItem value="Accepted">Accepted</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center text-sm text-gray-600">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Applied: {new Date(job.appliedDate).toLocaleDateString()}
+                <div>
+                  <Label htmlFor="appliedDate">Applied Date</Label>
+                  <Input
+                    id="appliedDate"
+                    type="date"
+                    value={newJob.appliedDate}
+                    onChange={(e) => setNewJob({...newJob, appliedDate: e.target.value})}
+                  />
                 </div>
-                
-                {job.location && (
-                  <div className="flex items-center text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    {job.location}
-                  </div>
-                )}
-                
-                {job.salary && (
-                  <div className="flex items-center text-sm text-gray-600">
-                    <DollarSign className="h-4 w-4 mr-2" />
-                    {job.salary}
-                  </div>
-                )}
-                
-                {job.notes && (
-                  <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded-md">
-                    {job.notes}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              </div>
 
-        {filteredAndSortedJobs.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">
-              <Building className="h-12 w-12 mx-auto" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="location">Location</Label>
+                  <Input
+                    id="location"
+                    value={newJob.location}
+                    onChange={(e) => setNewJob({...newJob, location: e.target.value})}
+                    placeholder="San Francisco, CA"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="salary">Salary Range</Label>
+                  <Input
+                    id="salary"
+                    value={newJob.salary}
+                    onChange={(e) => setNewJob({...newJob, salary: e.target.value})}
+                    placeholder="$120,000 - $180,000"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={newJob.notes}
+                  onChange={(e) => setNewJob({...newJob, notes: e.target.value})}
+                  placeholder="Add any notes about this application..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button onClick={handleAddJob} className="flex-1">
+                  Add Application
+                </Button>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No applications found</h3>
-            <p className="text-gray-600">
-              {searchQuery || statusFilter !== 'all' 
-                ? 'Try adjusting your search or filter criteria.'
-                : 'Get started by adding your first job application!'
-              }
-            </p>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Job Details Modal */}
+        <JobApplicationModal
+          job={selectedJob}
+          isOpen={isJobModalOpen}
+          onClose={() => setIsJobModalOpen(false)}
+          onUpdate={handleUpdateJob}
+          onDelete={handleDeleteJob}
+          mode={modalMode}
+        />
       </div>
     </div>
   );
