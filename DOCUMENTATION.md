@@ -1,4 +1,6 @@
 # Job Application Tracker - Technical Documentation
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20App-blue?style=for-the-badge)](https://bulk-data-uploader.vercel.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/ashk6645/Bulk-Data-Uploader)
 
 ## 📋 Problem Understanding
 
@@ -329,5 +331,48 @@ interface JobApplication {
 4. **CI/CD Pipeline**: Automated testing and deployment workflows
 
 ---
+## 🤝 Contributing
 
-*This project demonstrates proficiency in modern full-stack development, emphasizing clean architecture, security best practices, and scalable design patterns. The implementation showcases both technical depth and practical problem-solving skills essential for senior development roles.*
+Contributions are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+- Follow TypeScript best practices
+- Maintain component modularity
+- Add appropriate error handling
+- Update documentation for new features
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 👤 Author
+
+**Your Name**
+- GitHub: [ashk645](https://github.com/ashk6645)
+- LinkedIn: [Ashutosh Pratap Singh](https://linkedin.com/in/ashk6645)
+- Email: ashk6645@gmail.com
+
+## 🙏 Acknowledgments
+
+- [Supabase](https://supabase.com) for the excellent backend platform
+- [shadcn/ui](https://ui.shadcn.com) for the beautiful component library
+- [Tailwind CSS](https://tailwindcss.com) for the utility-first CSS framework
+- [Lucide](https://lucide.dev) for the comprehensive icon library
+
+---
+
+<div align="center">
+  <p>Built using modern web technologies</p>
+  <p>
+    <a href="https://bulk-data-uploader.vercel.app/">🌐 Live Demo</a> •
+    <a href="https://github.com/ashk6645/Bulk-Data-Uploader">📁 Source Code</a> •
+    <a href="mailto:ashk6645@gmail.com">📧 Contact</a>
+  </p>
+</div>
+
