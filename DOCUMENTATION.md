@@ -1,6 +1,6 @@
 # Job Application Tracker - Technical Documentation
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20App-blue?style=for-the-badge)](https://bulk-data-uploader.vercel.app/)
-[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/ashk6645/Bulk-Data-Uploader)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20App-blue?style=for-the-badge)](https://job-application-tracker-mini-crm.vercel.app/)
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/ashk6645/Job-Application-Tracker-Mini-CRM-)
 
 ## 📋 Problem Understanding
 
@@ -369,8 +369,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <div align="center">
   <p>Built using modern web technologies</p>
   <p>
-    <a href="https://bulk-data-uploader.vercel.app/">🌐 Live Demo</a> •
-    <a href="https://github.com/ashk6645/Bulk-Data-Uploader">📁 Source Code</a> •
+    <a href="https://job-application-tracker-mini-crm.vercel.app/">🌐 Live Demo</a> •
+    <a href="https://github.com/ashk6645/Job-Application-Tracker-Mini-CRM-">📁 Source Code</a> •
     <a href="mailto:ashk6645@gmail.com">📧 Contact</a>
   </p>
 </div>
