@@ -296,5 +296,5 @@ supabase
   </p>
 </div>
 
-**Built using modern web technologies**
+
 
