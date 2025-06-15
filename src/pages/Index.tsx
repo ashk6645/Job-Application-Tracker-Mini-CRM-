@@ -14,13 +14,11 @@ import { ApplicationsGrid } from '@/components/dashboard/ApplicationsGrid';
 import { AddJobDialog } from '@/components/dashboard/AddJobDialog';
 import { useJobApplications, type JobApplication } from '@/hooks/useJobApplications';
 import { useAuth } from '@/hooks/useAuth';
-import { useEmailNotifications } from '@/hooks/useEmailNotifications';
 import Navbar from '@/components/Navbar';
 
 const Index = () => {
   const { jobs, loading, addJobApplication, updateJobApplication, deleteJobApplication } = useJobApplications();
   const { userRole } = useAuth();
-  const { sendNotificationEmail } = useEmailNotifications();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('date-desc');
@@ -60,6 +58,10 @@ const Index = () => {
     setSelectedJob(job);
     setModalMode('view');
     setIsJobModalOpen(true);
+  };
+
+  const handleUpdateJob = async (id: string, updates: Partial<JobApplication>) => {
+    await updateJobApplication(id, updates);
   };
 
   if (loading) {
@@ -122,7 +124,7 @@ const Index = () => {
           <TabsContent value="overview" className="space-y-8">
             <StatsCards jobs={jobs} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ReminderSystem jobs={jobs} onUpdateJob={updateJobApplication} />
+              <ReminderSystem jobs={jobs} onUpdateJob={handleUpdateJob} />
               <QuickActions
                 onAddApplication={() => setIsAddDialogOpen(true)}
                 onViewAnalytics={() => setActiveTab('analytics')}
@@ -136,7 +138,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="reminders">
-            <ReminderSystem jobs={jobs} onUpdateJob={updateJobApplication} />
+            <ReminderSystem jobs={jobs} onUpdateJob={handleUpdateJob} />
           </TabsContent>
 
           <TabsContent value="export">

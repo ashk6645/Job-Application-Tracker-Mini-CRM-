@@ -1,104 +1,108 @@
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-
-type JobStatus = 'Applied' | 'Interview' | 'Offer' | 'Rejected' | 'Accepted';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { JobApplication } from '@/hooks/useJobApplications';
 
 interface AddJobDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (jobData: any) => Promise<void>;
+  onAdd: (jobData: Omit<JobApplication, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => Promise<any>;
 }
 
 export const AddJobDialog = ({ isOpen, onClose, onAdd }: AddJobDialogProps) => {
-  const { toast } = useToast();
-  
-  const [newJob, setNewJob] = useState({
+  const [formData, setFormData] = useState({
     company: '',
     role: '',
-    status: 'Applied' as JobStatus,
+    status: 'Applied' as JobApplication['status'],
     applied_date: new Date().toISOString().split('T')[0],
-    notes: '',
     location: '',
     salary: '',
     type: 'Full-time',
     contact_person: '',
-    follow_up_date: '',
-    job_url: ''
+    job_url: '',
+    notes: '',
+    follow_up_date: ''
   });
 
-  const handleAddJob = async () => {
-    if (!newJob.company || !newJob.role) {
-      toast({
-        title: "Error",
-        description: "Company and role are required fields.",
-        variant: "destructive"
-      });
-      return;
-    }
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.company || !formData.role) return;
+
+    setIsSubmitting(true);
     try {
-      await onAdd(newJob);
-      setNewJob({
+      await onAdd({
+        ...formData,
+        follow_up_date: formData.follow_up_date || undefined,
+        location: formData.location || undefined,
+        salary: formData.salary || undefined,
+        contact_person: formData.contact_person || undefined,
+        job_url: formData.job_url || undefined,
+        notes: formData.notes || undefined
+      });
+      
+      // Reset form
+      setFormData({
         company: '',
         role: '',
         status: 'Applied',
         applied_date: new Date().toISOString().split('T')[0],
-        notes: '',
         location: '',
         salary: '',
         type: 'Full-time',
         contact_person: '',
-        follow_up_date: '',
-        job_url: ''
+        job_url: '',
+        notes: '',
+        follow_up_date: ''
       });
       onClose();
     } catch (error) {
-      // Error is handled in the hook
+      console.error('Error adding job:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Job Application</DialogTitle>
-          <DialogDescription>
-            Fill in the details for your new job application.
-          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="company">Company *</Label>
               <Input
                 id="company"
-                value={newJob.company}
-                onChange={(e) => setNewJob({...newJob, company: e.target.value})}
-                placeholder="Google"
+                value={formData.company}
+                onChange={(e) => setFormData(prev => ({ ...prev, company: e.target.value }))}
+                required
               />
             </div>
+            
             <div>
               <Label htmlFor="role">Role *</Label>
               <Input
                 id="role"
-                value={newJob.role}
-                onChange={(e) => setNewJob({...newJob, role: e.target.value})}
-                placeholder="Software Engineer"
+                value={formData.role}
+                onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))}
+                required
               />
             </div>
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="status">Status</Label>
-              <Select value={newJob.status} onValueChange={(value: JobStatus) => setNewJob({...newJob, status: value})}>
+              <Select value={formData.status} onValueChange={(value: JobApplication['status']) => setFormData(prev => ({ ...prev, status: value }))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -111,34 +115,85 @@ export const AddJobDialog = ({ isOpen, onClose, onAdd }: AddJobDialogProps) => {
                 </SelectContent>
               </Select>
             </div>
+            
             <div>
-              <Label htmlFor="appliedDate">Applied Date</Label>
+              <Label htmlFor="applied_date">Applied Date</Label>
               <Input
-                id="appliedDate"
+                id="applied_date"
                 type="date"
-                value={newJob.applied_date}
-                onChange={(e) => setNewJob({...newJob, applied_date: e.target.value})}
+                value={formData.applied_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, applied_date: e.target.value }))}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="location">Location</Label>
               <Input
                 id="location"
-                value={newJob.location}
-                onChange={(e) => setNewJob({...newJob, location: e.target.value})}
-                placeholder="San Francisco, CA"
+                value={formData.location}
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
               />
             </div>
+            
             <div>
-              <Label htmlFor="salary">Salary Range</Label>
+              <Label htmlFor="salary">Salary</Label>
               <Input
                 id="salary"
-                value={newJob.salary}
-                onChange={(e) => setNewJob({...newJob, salary: e.target.value})}
-                placeholder="$120,000 - $180,000"
+                value={formData.salary}
+                onChange={(e) => setFormData(prev => ({ ...prev, salary: e.target.value }))}
+                placeholder="e.g., $80,000 - $100,000"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="type">Type</Label>
+              <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Full-time">Full-time</SelectItem>
+                  <SelectItem value="Part-time">Part-time</SelectItem>
+                  <SelectItem value="Contract">Contract</SelectItem>
+                  <SelectItem value="Freelance">Freelance</SelectItem>
+                  <SelectItem value="Internship">Internship</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="contact_person">Contact Person</Label>
+              <Input
+                id="contact_person"
+                value={formData.contact_person}
+                onChange={(e) => setFormData(prev => ({ ...prev, contact_person: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="job_url">Job URL</Label>
+              <Input
+                id="job_url"
+                type="url"
+                value={formData.job_url}
+                onChange={(e) => setFormData(prev => ({ ...prev, job_url: e.target.value }))}
+                placeholder="https://..."
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="follow_up_date">Follow-up Date</Label>
+              <Input
+                id="follow_up_date"
+                type="date"
+                value={formData.follow_up_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, follow_up_date: e.target.value }))}
               />
             </div>
           </div>
@@ -147,22 +202,22 @@ export const AddJobDialog = ({ isOpen, onClose, onAdd }: AddJobDialogProps) => {
             <Label htmlFor="notes">Notes</Label>
             <Textarea
               id="notes"
-              value={newJob.notes}
-              onChange={(e) => setNewJob({...newJob, notes: e.target.value})}
-              placeholder="Add any notes about this application..."
+              value={formData.notes}
+              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               rows={3}
+              placeholder="Additional notes about the application..."
             />
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button onClick={handleAddJob} className="flex-1">
-              Add Application
-            </Button>
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Adding...' : 'Add Application'}
+            </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

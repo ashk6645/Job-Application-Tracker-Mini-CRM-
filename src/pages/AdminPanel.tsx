@@ -18,11 +18,12 @@ import { useJobApplications } from '@/hooks/useJobApplications';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import { JobApplicationModal } from '@/components/JobApplicationModal';
+import type { JobApplication } from '@/hooks/useJobApplications';
 
 const AdminPanel = () => {
   const { jobs, loading, updateJobApplication, deleteJobApplication } = useJobApplications();
   const { userRole } = useAuth();
-  const [selectedJob, setSelectedJob] = useState(null);
+  const [selectedJob, setSelectedJob] = useState<JobApplication | null>(null);
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
 
@@ -63,16 +64,24 @@ const AdminPanel = () => {
 
   const stats = getStats();
 
-  const handleViewJob = (job: any) => {
+  const handleViewJob = (job: JobApplication) => {
     setSelectedJob(job);
     setModalMode('view');
     setIsJobModalOpen(true);
   };
 
-  const handleEditJob = (job: any) => {
+  const handleEditJob = (job: JobApplication) => {
     setSelectedJob(job);
     setModalMode('edit');
     setIsJobModalOpen(true);
+  };
+
+  const handleUpdateJob = async (id: string, updates: Partial<JobApplication>) => {
+    await updateJobApplication(id, updates);
+  };
+
+  const handleDeleteJob = async (id: string) => {
+    await deleteJobApplication(id);
   };
 
   if (loading) {
@@ -227,7 +236,7 @@ const AdminPanel = () => {
                       <Button 
                         size="sm" 
                         variant="ghost"
-                        onClick={() => deleteJobApplication(job.id)}
+                        onClick={() => handleDeleteJob(job.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -250,8 +259,8 @@ const AdminPanel = () => {
           job={selectedJob}
           isOpen={isJobModalOpen}
           onClose={() => setIsJobModalOpen(false)}
-          onUpdate={updateJobApplication}
-          onDelete={deleteJobApplication}
+          onUpdate={handleUpdateJob}
+          onDelete={handleDeleteJob}
           mode={modalMode}
         />
       </div>
