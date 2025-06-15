@@ -87,7 +87,6 @@ Developed a comprehensive **Job Application Tracker** that serves as a centraliz
 #### Development Tools
 - **ESLint + Prettier**: Code quality and formatting
 - **Git**: Version control with conventional commits
-- **Lovable Platform**: AI-assisted development environment
 
 ---
 
