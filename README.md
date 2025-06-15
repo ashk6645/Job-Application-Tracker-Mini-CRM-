@@ -271,7 +271,30 @@ supabase
 - **DevOps Practices** (Git, Deployment, Performance)
 
 ---
+## 👤 Author
 
-**Built with ❤️ using modern web technologies**
+**Your Name**
+- GitHub: [ashk645](https://github.com/ashk6645)
+- LinkedIn: [Ashutosh Pratap Singh](https://linkedin.com/in/ashk6645)
+- Email: ashk6645@gmail.com
 
-*This project demonstrates proficiency in full-stack development, modern React patterns, database design, and user experience principles.*
+## 🙏 Acknowledgments
+
+- [Supabase](https://supabase.com) for the excellent backend platform
+- [shadcn/ui](https://ui.shadcn.com) for the beautiful component library
+- [Tailwind CSS](https://tailwindcss.com) for the utility-first CSS framework
+- [Lucide](https://lucide.dev) for the comprehensive icon library
+
+---
+
+<div align="center">
+  <p>Built using modern web technologies</p>
+  <p>
+    <a href="https://job-application-tracker-mini-crm.vercel.app/">🌐 Live Demo</a> •
+    <a href="https://github.com/ashk6645/Job-Application-Tracker-Mini-CRM-">📁 Source Code</a> •
+    <a href="mailto:ashk6645@gmail.com">📧 Contact</a>
+  </p>
+</div>
+
+**Built using modern web technologies**
+
