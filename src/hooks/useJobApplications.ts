@@ -43,7 +43,7 @@ export const useJobApplications = () => {
       const { data, error } = await query.order('applied_date', { ascending: false });
 
       if (error) throw error;
-      setJobs(data || []);
+      setJobs((data || []) as JobApplication[]);
     } catch (error: any) {
       console.error('Error fetching job applications:', error);
       toast({
@@ -68,7 +68,7 @@ export const useJobApplications = () => {
 
       if (error) throw error;
 
-      setJobs(prev => [data, ...prev]);
+      setJobs(prev => [data as JobApplication, ...prev]);
       
       // Create notification
       await supabase.from('notifications').insert([{
@@ -106,7 +106,7 @@ export const useJobApplications = () => {
 
       if (error) throw error;
 
-      setJobs(prev => prev.map(job => job.id === id ? data : job));
+      setJobs(prev => prev.map(job => job.id === id ? data as JobApplication : job));
       
       // Create notification for status changes
       if (updates.status && user) {
