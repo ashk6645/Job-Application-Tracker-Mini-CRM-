@@ -9,30 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, DollarSign, Building, Clock, Edit, Trash2, ExternalLink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-type JobStatus = 'Applied' | 'Interview' | 'Offer' | 'Rejected' | 'Accepted';
-
-interface JobApplication {
-  id: string;
-  company: string;
-  role: string;
-  status: JobStatus;
-  appliedDate: string;
-  notes: string;
-  location?: string;
-  salary?: string;
-  type?: string;
-  jobUrl?: string;
-  contactPerson?: string;
-  followUpDate?: string;
-}
+import { JobApplication } from '@/hooks/useJobApplications';
 
 interface JobApplicationModalProps {
   job: JobApplication | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (updatedJob: JobApplication) => void;
-  onDelete: (jobId: string) => void;
+  onUpdate: (id: string, updates: Partial<JobApplication>) => Promise<any>;
+  onDelete: (jobId: string) => Promise<void>;
   mode: 'view' | 'edit';
 }
 
@@ -51,7 +35,7 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
 
   if (!job || !editedJob) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editedJob.company || !editedJob.role) {
       toast({
         title: "Error",
@@ -61,22 +45,49 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
       return;
     }
 
-    onUpdate(editedJob);
-    setIsEditing(false);
-    toast({
-      title: "Success!",
-      description: "Job application updated successfully."
-    });
+    try {
+      await onUpdate(editedJob.id, {
+        company: editedJob.company,
+        role: editedJob.role,
+        status: editedJob.status,
+        applied_date: editedJob.applied_date,
+        location: editedJob.location,
+        salary: editedJob.salary,
+        contact_person: editedJob.contact_person,
+        follow_up_date: editedJob.follow_up_date,
+        job_url: editedJob.job_url,
+        notes: editedJob.notes
+      });
+      setIsEditing(false);
+      toast({
+        title: "Success!",
+        description: "Job application updated successfully."
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update job application.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this application?')) {
-      onDelete(job.id);
-      onClose();
-      toast({
-        title: "Deleted",
-        description: "Job application deleted successfully."
-      });
+      try {
+        await onDelete(job.id);
+        onClose();
+        toast({
+          title: "Deleted",
+          description: "Job application deleted successfully."
+        });
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to delete job application.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -127,7 +138,7 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
                 </Badge>
                 <div className="flex items-center text-sm text-gray-600">
                   <Calendar className="h-4 w-4 mr-1" />
-                  Applied {getDaysAgo(editedJob.appliedDate)} days ago
+                  Applied {getDaysAgo(editedJob.applied_date)} days ago
                 </div>
               </div>
 
@@ -145,27 +156,27 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
                 </div>
               )}
 
-              {editedJob.contactPerson && (
+              {editedJob.contact_person && (
                 <div className="flex items-center text-sm text-gray-600">
                   <span className="font-medium mr-2">Contact:</span>
-                  {editedJob.contactPerson}
+                  {editedJob.contact_person}
                 </div>
               )}
 
-              {editedJob.jobUrl && (
+              {editedJob.job_url && (
                 <div className="flex items-center text-sm">
                   <ExternalLink className="h-4 w-4 mr-2" />
-                  <a href={editedJob.jobUrl} target="_blank" rel="noopener noreferrer" 
+                  <a href={editedJob.job_url} target="_blank" rel="noopener noreferrer" 
                      className="text-blue-600 hover:underline">
                     View Job Posting
                   </a>
                 </div>
               )}
 
-              {editedJob.followUpDate && (
+              {editedJob.follow_up_date && (
                 <div className="flex items-center text-sm text-gray-600">
                   <Clock className="h-4 w-4 mr-2" />
-                  Follow up on: {new Date(editedJob.followUpDate).toLocaleDateString()}
+                  Follow up on: {new Date(editedJob.follow_up_date).toLocaleDateString()}
                 </div>
               )}
 
@@ -201,7 +212,7 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="status">Status</Label>
-                  <Select value={editedJob.status} onValueChange={(value: JobStatus) => setEditedJob({...editedJob, status: value})}>
+                  <Select value={editedJob.status} onValueChange={(value: JobApplication['status']) => setEditedJob({...editedJob, status: value})}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -215,12 +226,12 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="appliedDate">Applied Date</Label>
+                  <Label htmlFor="applied_date">Applied Date</Label>
                   <Input
-                    id="appliedDate"
+                    id="applied_date"
                     type="date"
-                    value={editedJob.appliedDate}
-                    onChange={(e) => setEditedJob({...editedJob, appliedDate: e.target.value})}
+                    value={editedJob.applied_date}
+                    onChange={(e) => setEditedJob({...editedJob, applied_date: e.target.value})}
                   />
                 </div>
               </div>
@@ -248,31 +259,31 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="contactPerson">Contact Person</Label>
+                  <Label htmlFor="contact_person">Contact Person</Label>
                   <Input
-                    id="contactPerson"
-                    value={editedJob.contactPerson || ''}
-                    onChange={(e) => setEditedJob({...editedJob, contactPerson: e.target.value})}
+                    id="contact_person"
+                    value={editedJob.contact_person || ''}
+                    onChange={(e) => setEditedJob({...editedJob, contact_person: e.target.value})}
                     placeholder="John Doe - HR Manager"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="followUpDate">Follow-up Date</Label>
+                  <Label htmlFor="follow_up_date">Follow-up Date</Label>
                   <Input
-                    id="followUpDate"
+                    id="follow_up_date"
                     type="date"
-                    value={editedJob.followUpDate || ''}
-                    onChange={(e) => setEditedJob({...editedJob, followUpDate: e.target.value})}
+                    value={editedJob.follow_up_date || ''}
+                    onChange={(e) => setEditedJob({...editedJob, follow_up_date: e.target.value})}
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="jobUrl">Job Posting URL</Label>
+                <Label htmlFor="job_url">Job Posting URL</Label>
                 <Input
-                  id="jobUrl"
-                  value={editedJob.jobUrl || ''}
-                  onChange={(e) => setEditedJob({...editedJob, jobUrl: e.target.value})}
+                  id="job_url"
+                  value={editedJob.job_url || ''}
+                  onChange={(e) => setEditedJob({...editedJob, job_url: e.target.value})}
                   placeholder="https://company.com/careers/job-id"
                 />
               </div>
@@ -281,7 +292,7 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
-                  value={editedJob.notes}
+                  value={editedJob.notes || ''}
                   onChange={(e) => setEditedJob({...editedJob, notes: e.target.value})}
                   placeholder="Add any notes about this application..."
                   rows={4}
