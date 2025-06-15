@@ -14,11 +14,10 @@ import {
   Edit2,
   Trash2
 } from 'lucide-react';
-import { useJobApplications } from '@/hooks/useJobApplications';
+import { useJobApplications, type JobApplication } from '@/hooks/useJobApplications';
 import { useAuth } from '@/hooks/useAuth';
 import Navbar from '@/components/Navbar';
 import { JobApplicationModal } from '@/components/JobApplicationModal';
-import type { JobApplication } from '@/hooks/useJobApplications';
 
 const AdminPanel = () => {
   const { jobs, loading, updateJobApplication, deleteJobApplication } = useJobApplications();
