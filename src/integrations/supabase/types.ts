@@ -57,6 +57,90 @@ export type Database = {
         }
         Relationships: []
       }
+      job_applications: {
+        Row: {
+          applied_date: string
+          company: string
+          contact_person: string | null
+          created_at: string
+          follow_up_date: string | null
+          id: string
+          job_url: string | null
+          location: string | null
+          notes: string | null
+          role: string
+          salary: string | null
+          status: string
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_date?: string
+          company: string
+          contact_person?: string | null
+          created_at?: string
+          follow_up_date?: string | null
+          id?: string
+          job_url?: string | null
+          location?: string | null
+          notes?: string | null
+          role: string
+          salary?: string | null
+          status?: string
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_date?: string
+          company?: string
+          contact_person?: string | null
+          created_at?: string
+          follow_up_date?: string | null
+          id?: string
+          job_url?: string | null
+          location?: string | null
+          notes?: string | null
+          role?: string
+          salary?: string | null
+          status?: string
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -129,15 +213,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "applicant"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -252,6 +357,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "applicant"],
+    },
   },
 } as const

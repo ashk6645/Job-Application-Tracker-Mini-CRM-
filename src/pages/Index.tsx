@@ -14,92 +14,17 @@ import { JobApplicationModal } from '@/components/JobApplicationModal';
 import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
 import { ReminderSystem } from '@/components/ReminderSystem';
 import { ExportData } from '@/components/ExportData';
+import { useJobApplications, type JobApplication } from '@/hooks/useJobApplications';
+import { useAuth } from '@/hooks/useAuth';
+import { useEmailNotifications } from '@/hooks/useEmailNotifications';
+import Navbar from '@/components/Navbar';
 
 type JobStatus = 'Applied' | 'Interview' | 'Offer' | 'Rejected' | 'Accepted';
 
-interface JobApplication {
-  id: string;
-  company: string;
-  role: string;
-  status: JobStatus;
-  appliedDate: string;
-  notes: string;
-  location?: string;
-  salary?: string;
-  type?: string;
-  contactPerson?: string;
-  followUpDate?: string;
-  jobUrl?: string;
-}
-
-// Enhanced mock data
-const mockJobs: JobApplication[] = [
-  {
-    id: '1',
-    company: 'Google',
-    role: 'Frontend Developer',
-    status: 'Interview',
-    appliedDate: '2024-06-10',
-    notes: 'Applied through careers page. Technical interview scheduled for next week.',
-    location: 'Mountain View, CA',
-    salary: '$120,000 - $180,000',
-    type: 'Full-time',
-    contactPerson: 'Sarah Johnson - Technical Recruiter',
-    followUpDate: '2024-06-20',
-    jobUrl: 'https://careers.google.com/jobs/frontend-dev'
-  },
-  {
-    id: '2',
-    company: 'Microsoft',
-    role: 'Software Engineer',
-    status: 'Applied',
-    appliedDate: '2024-06-08',
-    notes: 'LinkedIn application. Waiting for response.',
-    location: 'Seattle, WA',
-    salary: '$110,000 - $160,000',
-    type: 'Full-time',
-    contactPerson: 'Mike Chen - Hiring Manager',
-    followUpDate: '2024-06-18'
-  },
-  {
-    id: '3',
-    company: 'Meta',
-    role: 'React Developer',
-    status: 'Offer',
-    appliedDate: '2024-06-05',
-    notes: 'Great interview process. Offer received!',
-    location: 'Menlo Park, CA',
-    salary: '$130,000 - $190,000',
-    type: 'Full-time',
-    contactPerson: 'Lisa Park - Senior Recruiter'
-  },
-  {
-    id: '4',
-    company: 'Amazon',
-    role: 'Full Stack Developer',
-    status: 'Rejected',
-    appliedDate: '2024-06-01',
-    notes: 'Technical interview did not go well.',
-    location: 'Austin, TX',
-    salary: '$100,000 - $150,000',
-    type: 'Full-time'
-  },
-  {
-    id: '5',
-    company: 'Apple',
-    role: 'iOS Developer',
-    status: 'Applied',
-    appliedDate: '2024-05-25',
-    notes: 'Applied through company website. No response yet.',
-    location: 'Cupertino, CA',
-    salary: '$140,000 - $200,000',
-    type: 'Full-time',
-    followUpDate: '2024-06-15'
-  }
-];
-
 const Index = () => {
-  const [jobs, setJobs] = useState<JobApplication[]>(mockJobs);
+  const { jobs, loading, addJobApplication, updateJobApplication, deleteJobApplication } = useJobApplications();
+  const { userRole } = useAuth();
+  const { sendNotificationEmail } = useEmailNotifications();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('date-desc');
@@ -115,14 +40,14 @@ const Index = () => {
     company: '',
     role: '',
     status: 'Applied' as JobStatus,
-    appliedDate: new Date().toISOString().split('T')[0],
+    applied_date: new Date().toISOString().split('T')[0],
     notes: '',
     location: '',
     salary: '',
     type: 'Full-time',
-    contactPerson: '',
-    followUpDate: '',
-    jobUrl: ''
+    contact_person: '',
+    follow_up_date: '',
+    job_url: ''
   });
 
   const statusColors = {
@@ -146,9 +71,9 @@ const Index = () => {
     return filtered.sort((a, b) => {
       switch (sortBy) {
         case 'date-desc':
-          return new Date(b.appliedDate).getTime() - new Date(a.appliedDate).getTime();
+          return new Date(b.applied_date).getTime() - new Date(a.applied_date).getTime();
         case 'date-asc':
-          return new Date(a.appliedDate).getTime() - new Date(b.appliedDate).getTime();
+          return new Date(a.applied_date).getTime() - new Date(b.applied_date).getTime();
         case 'company':
           return a.company.localeCompare(b.company);
         case 'status':
@@ -159,7 +84,7 @@ const Index = () => {
     });
   }, [jobs, searchQuery, statusFilter, sortBy]);
 
-  const handleAddJob = () => {
+  const handleAddJob = async () => {
     if (!newJob.company || !newJob.role) {
       toast({
         title: "Error",
@@ -169,39 +94,25 @@ const Index = () => {
       return;
     }
 
-    const jobToAdd: JobApplication = {
-      ...newJob,
-      id: Date.now().toString()
-    };
-
-    setJobs([jobToAdd, ...jobs]);
-    setNewJob({
-      company: '',
-      role: '',
-      status: 'Applied',
-      appliedDate: new Date().toISOString().split('T')[0],
-      notes: '',
-      location: '',
-      salary: '',
-      type: 'Full-time',
-      contactPerson: '',
-      followUpDate: '',
-      jobUrl: ''
-    });
-    setIsAddDialogOpen(false);
-    
-    toast({
-      title: "Success!",
-      description: "Job application added successfully."
-    });
-  };
-
-  const handleUpdateJob = (updatedJob: JobApplication) => {
-    setJobs(jobs.map(job => job.id === updatedJob.id ? updatedJob : job));
-  };
-
-  const handleDeleteJob = (jobId: string) => {
-    setJobs(jobs.filter(job => job.id !== jobId));
+    try {
+      await addJobApplication(newJob);
+      setNewJob({
+        company: '',
+        role: '',
+        status: 'Applied',
+        applied_date: new Date().toISOString().split('T')[0],
+        notes: '',
+        location: '',
+        salary: '',
+        type: 'Full-time',
+        contact_person: '',
+        follow_up_date: '',
+        job_url: ''
+      });
+      setIsAddDialogOpen(false);
+    } catch (error) {
+      // Error is handled in the hook
+    }
   };
 
   const handleViewJob = (job: JobApplication) => {
@@ -223,13 +134,42 @@ const Index = () => {
 
   const stats = getStatusStats();
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">Loading your job applications...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Job Application Tracker</h1>
-          <p className="text-gray-600">Manage and track your job applications with advanced analytics</p>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              {userRole === 'admin' ? 'Job Application Management' : 'My Job Applications'}
+            </h1>
+            <p className="text-gray-600">
+              {userRole === 'admin' 
+                ? 'Manage job applications across all users' 
+                : 'Track and manage your job applications with advanced analytics'
+              }
+            </p>
+          </div>
+          
+          {userRole === 'admin' && (
+            <Button onClick={() => window.location.href = '/admin'} variant="outline">
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Admin Dashboard
+            </Button>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -294,7 +234,7 @@ const Index = () => {
 
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <ReminderSystem jobs={jobs} onUpdateJob={handleUpdateJob} />
+              <ReminderSystem jobs={jobs} onUpdateJob={updateJobApplication} />
               <Card>
                 <CardHeader>
                   <CardTitle>Quick Actions</CardTitle>
@@ -335,7 +275,7 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="reminders">
-            <ReminderSystem jobs={jobs} onUpdateJob={handleUpdateJob} />
+            <ReminderSystem jobs={jobs} onUpdateJob={updateJobApplication} />
           </TabsContent>
 
           <TabsContent value="export">
@@ -384,112 +324,13 @@ const Index = () => {
                 </SelectContent>
               </Select>
 
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Application
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Add New Job Application</DialogTitle>
-                    <DialogDescription>
-                      Fill in the details for your new job application.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="company">Company *</Label>
-                        <Input
-                          id="company"
-                          value={newJob.company}
-                          onChange={(e) => setNewJob({...newJob, company: e.target.value})}
-                          placeholder="Google"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="role">Role *</Label>
-                        <Input
-                          id="role"
-                          value={newJob.role}
-                          onChange={(e) => setNewJob({...newJob, role: e.target.value})}
-                          placeholder="Software Engineer"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="status">Status</Label>
-                        <Select value={newJob.status} onValueChange={(value: JobStatus) => setNewJob({...newJob, status: value})}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Applied">Applied</SelectItem>
-                            <SelectItem value="Interview">Interview</SelectItem>
-                            <SelectItem value="Offer">Offer</SelectItem>
-                            <SelectItem value="Rejected">Rejected</SelectItem>
-                            <SelectItem value="Accepted">Accepted</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="appliedDate">Applied Date</Label>
-                        <Input
-                          id="appliedDate"
-                          type="date"
-                          value={newJob.appliedDate}
-                          onChange={(e) => setNewJob({...newJob, appliedDate: e.target.value})}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="location">Location</Label>
-                        <Input
-                          id="location"
-                          value={newJob.location}
-                          onChange={(e) => setNewJob({...newJob, location: e.target.value})}
-                          placeholder="San Francisco, CA"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="salary">Salary Range</Label>
-                        <Input
-                          id="salary"
-                          value={newJob.salary}
-                          onChange={(e) => setNewJob({...newJob, salary: e.target.value})}
-                          placeholder="$120,000 - $180,000"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="notes">Notes</Label>
-                      <Textarea
-                        id="notes"
-                        value={newJob.notes}
-                        onChange={(e) => setNewJob({...newJob, notes: e.target.value})}
-                        placeholder="Add any notes about this application..."
-                        rows={3}
-                      />
-                    </div>
-
-                    <div className="flex gap-2 pt-4">
-                      <Button onClick={handleAddJob} className="flex-1">
-                        Add Application
-                      </Button>
-                      <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                        Cancel
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={() => setIsAddDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Application
+              </Button>
             </div>
 
             {/* Job Applications Grid */}
@@ -525,7 +366,7 @@ const Index = () => {
                   <CardContent className="space-y-3">
                     <div className="flex items-center text-sm text-gray-600">
                       <Calendar className="h-4 w-4 mr-2" />
-                      Applied: {new Date(job.appliedDate).toLocaleDateString()}
+                      Applied: {new Date(job.applied_date).toLocaleDateString()}
                     </div>
                     
                     {job.location && (
@@ -571,12 +412,6 @@ const Index = () => {
 
         {/* Add Job Dialog */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Application
-            </Button>
-          </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Job Application</DialogTitle>
@@ -627,8 +462,8 @@ const Index = () => {
                   <Input
                     id="appliedDate"
                     type="date"
-                    value={newJob.appliedDate}
-                    onChange={(e) => setNewJob({...newJob, appliedDate: e.target.value})}
+                    value={newJob.applied_date}
+                    onChange={(e) => setNewJob({...newJob, applied_date: e.target.value})}
                   />
                 </div>
               </div>
@@ -682,8 +517,8 @@ const Index = () => {
           job={selectedJob}
           isOpen={isJobModalOpen}
           onClose={() => setIsJobModalOpen(false)}
-          onUpdate={handleUpdateJob}
-          onDelete={handleDeleteJob}
+          onUpdate={updateJobApplication}
+          onDelete={deleteJobApplication}
           mode={modalMode}
         />
       </div>
