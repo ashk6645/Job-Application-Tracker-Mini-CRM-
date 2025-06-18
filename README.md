@@ -11,100 +11,14 @@ A comprehensive full-stack web application built with modern technologies to hel
 ## 📋 Table of Contents
 
 - [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
 - [Getting Started](#getting-started)
 - [API Documentation](#api-documentation)
 - [Database Schema](#database-schema)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
 - [Security](#security)
 - [Performance](#performance)
 - [Contributing](#contributing)
-
-## ✨ Features
-
-### 🔐 Authentication & Authorization
-- **JWT-based Authentication** with Supabase Auth
-- **Role-based Access Control** (Admin/Applicant roles)
-- **Secure Route Protection** with middleware
-- **Email Verification** and password reset functionality
-
-### 📊 Application Management
-- **Full CRUD Operations** for job applications
-- **Real-time Status Tracking** (Applied, Interview, Offer, Rejected, Accepted)
-- **Advanced Filtering & Sorting** by status, date, company
-- **Bulk Operations** and data export capabilities
-- **File Upload Support** for resumes and documents
-
-### 📈 Analytics & Insights
-- **Interactive Dashboard** with application statistics
-- **Data Visualization** using Recharts library
-- **Application Success Rate** tracking
-- **Time-to-response** analytics
-- **Monthly/Weekly Trends** visualization
-
-### 🔔 Real-time Notifications
-- **Live Updates** using Supabase Realtime
-- **Email Notifications** for status changes
-- **In-app Notification System** with toast messages
-- **Follow-up Reminders** and deadline tracking
-
-### 👨‍💼 Admin Panel
-- **Multi-user Management** for organizations
-- **Application Oversight** across all users
-- **User Activity Monitoring**
-- **System Analytics** and reporting
-
-### 🎨 User Experience
-- **Responsive Design** optimized for all devices
-- **Dark/Light Theme** support
-- **Accessibility Compliant** (WCAG 2.1)
-- **Progressive Web App** capabilities
-- **Offline Support** with data synchronization
-
-## 🛠 Tech Stack
-
-### Frontend
-- **React 18** with TypeScript for type safety
-- **Vite** for lightning-fast development and builds
-- **Tailwind CSS** for utility-first styling
-- **Shadcn/UI** for consistent, accessible components
-- **React Router** for client-side routing
-- **TanStack Query** for efficient data fetching and caching
-- **React Hook Form** with Zod validation
-
-### Backend & Database
-- **Supabase** for backend-as-a-service
-- **PostgreSQL** with Row Level Security (RLS)
-- **Real-time Subscriptions** for live updates
-- **Edge Functions** for serverless computing
-- **Automated Database Migrations**
-
-### DevOps & Deployment
-- **Git** version control with conventional commits
-- **ESLint & Prettier** for code quality
-- **TypeScript** for static type checking
-- **Responsive Testing** across multiple devices
-- **Performance Monitoring** and optimization
-
-## 🏗 Architecture
-
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   React Client  │    │   Supabase API  │    │   PostgreSQL    │
-│                 │    │                 │    │                 │
-│  • Components   │◄──►│  • Auth         │◄──►│  • Tables       │
-│  • Hooks        │    │  • Database     │    │  • RLS Policies │
-│  • State Mgmt   │    │  • Realtime     │    │  • Functions    │
-│  • Routing      │    │  • Edge Funcs   │    │  • Triggers     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
-
-### Key Design Patterns
-- **Component Composition** for reusable UI elements
-- **Custom Hooks** for business logic abstraction
-- **Context API** for global state management
-- **Error Boundaries** for graceful error handling
-- **Optimistic Updates** for better UX
 
 ## 🚀 Getting Started
 
@@ -116,8 +30,8 @@ A comprehensive full-stack web application built with modern technologies to hel
 
 1. **Clone the repository**
    ```bash
-   git clone <YOUR_GIT_URL>
-   cd <YOUR_PROJECT_NAME>
+   git clone https://github.com/ashk6645/Job-Application-Tracker-Mini-CRM-.git
+   cd Job-Application-Tracker-Mini-CRM
    ```
 
 2. **Install dependencies**
@@ -214,6 +128,94 @@ supabase
 - **XSS protection** with input sanitization
 - **CSRF protection** with SameSite cookies
 - **Data encryption** at rest and in transit
+
+## ✨ Features
+
+### 🔐 Authentication & Authorization
+- **JWT-based Authentication** with Supabase Auth
+- **Role-based Access Control** (Admin/Applicant roles)
+- **Secure Route Protection** with middleware
+- **Email Verification** and password reset functionality
+
+### 📊 Application Management
+- **Full CRUD Operations** for job applications
+- **Real-time Status Tracking** (Applied, Interview, Offer, Rejected, Accepted)
+- **Advanced Filtering & Sorting** by status, date, company
+- **Bulk Operations** and data export capabilities
+- **File Upload Support** for resumes and documents
+
+### 📈 Analytics & Insights
+- **Interactive Dashboard** with application statistics
+- **Data Visualization** using Recharts library
+- **Application Success Rate** tracking
+- **Time-to-response** analytics
+- **Monthly/Weekly Trends** visualization
+
+### 🔔 Real-time Notifications
+- **Live Updates** using Supabase Realtime
+- **Email Notifications** for status changes
+- **In-app Notification System** with toast messages
+- **Follow-up Reminders** and deadline tracking
+
+### 👨‍💼 Admin Panel
+- **Multi-user Management** for organizations
+- **Application Oversight** across all users
+- **User Activity Monitoring**
+- **System Analytics** and reporting
+
+### 🎨 User Experience
+- **Responsive Design** optimized for all devices
+- **Dark/Light Theme** support
+- **Accessibility Compliant** (WCAG 2.1)
+- **Progressive Web App** capabilities
+- **Offline Support** with data synchronization
+
+## 🛠 Tech Stack
+
+### Frontend
+- **React 18** with TypeScript for type safety
+- **Vite** for lightning-fast development and builds
+- **Tailwind CSS** for utility-first styling
+- **Shadcn/UI** for consistent, accessible components
+- **React Router** for client-side routing
+- **TanStack Query** for efficient data fetching and caching
+- **React Hook Form** with Zod validation
+
+### Backend & Database
+- **Supabase** for backend-as-a-service
+- **PostgreSQL** with Row Level Security (RLS)
+- **Real-time Subscriptions** for live updates
+- **Edge Functions** for serverless computing
+- **Automated Database Migrations**
+
+### DevOps & Deployment
+- **Git** version control with conventional commits
+- **ESLint & Prettier** for code quality
+- **TypeScript** for static type checking
+- **Responsive Testing** across multiple devices
+- **Performance Monitoring** and optimization
+
+## 🏗 Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   React Client  │    │   Supabase API  │    │   PostgreSQL    │
+│                 │    │                 │    │                 │
+│  • Components   │◄──►│  • Auth         │◄──►│  • Tables       │
+│  • Hooks        │    │  • Database     │    │  • RLS Policies │
+│  • State Mgmt   │    │  • Realtime     │    │  • Functions    │
+│  • Routing      │    │  • Edge Funcs   │    │  • Triggers     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+### Key Design Patterns
+- **Component Composition** for reusable UI elements
+- **Custom Hooks** for business logic abstraction
+- **Context API** for global state management
+- **Error Boundaries** for graceful error handling
+- **Optimistic Updates** for better UX
+
+
 
 ## ⚡ Performance
 
