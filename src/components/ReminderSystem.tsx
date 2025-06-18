@@ -147,7 +147,7 @@ export const ReminderSystem = ({ jobs, onUpdateJob }: ReminderSystemProps) => {
       await onUpdateJob(reminder.job.id, updates);
       toast({
         title: "Interview prep completed!",
-        description: "Reminder removed. Good luck with your interview!"
+        description: "Good luck with your interview!"
       });
     }
   };
