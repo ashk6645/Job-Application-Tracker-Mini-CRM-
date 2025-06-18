@@ -3,24 +3,35 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Download, FileText, Table, Calendar } from 'lucide-react';
+import { Download, FileText, Table, Calendar, File } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 type JobStatus = 'Applied' | 'Interview' | 'Offer' | 'Rejected' | 'Accepted';
+
+interface AutoTableOptions {
+  head: string[][];
+  body: string[][];
+  startY: number;
+  styles: { fontSize: number };
+  headStyles: { fillColor: number[] };
+  columnStyles: Record<number, { cellWidth: number }>;
+}
 
 interface JobApplication {
   id: string;
   company: string;
   role: string;
   status: JobStatus;
-  appliedDate: string;
-  notes: string;
+  applied_date: string;
+  notes?: string;
   location?: string;
   salary?: string;
   type?: string;
-  contactPerson?: string;
-  followUpDate?: string;
-  jobUrl?: string;
+  contact_person?: string;
+  follow_up_date?: string;
+  job_url?: string;
 }
 
 interface ExportDataProps {
@@ -52,7 +63,7 @@ export const ExportData = ({ jobs }: ExportDataProps) => {
         return jobs;
     }
     
-    return jobs.filter(job => new Date(job.appliedDate) >= cutoffDate);
+    return jobs.filter(job => new Date(job.applied_date) >= cutoffDate);
   };
 
   const exportToCSV = (data: JobApplication[]) => {
@@ -75,15 +86,14 @@ export const ExportData = ({ jobs }: ExportDataProps) => {
       ...data.map(job => [
         `"${job.company}"`,
         `"${job.role}"`,
-        `"${job.status}"`,
-        `"${job.appliedDate}"`,
+        `"${job.status}"`,        `"${job.applied_date}"`,
         `"${job.location || ''}"`,
         `"${job.salary || ''}"`,
         `"${job.type || ''}"`,
-        `"${job.contactPerson || ''}"`,
-        `"${job.followUpDate || ''}"`,
-        `"${job.jobUrl || ''}"`,
-        `"${job.notes.replace(/"/g, '""')}"`
+        `"${job.contact_person || ''}"`,
+        `"${job.follow_up_date || ''}"`,
+        `"${job.job_url || ''}"`,
+        `"${(job.notes || '').replace(/"/g, '""')}"`
       ].join(','))
     ].join('\n');
 
@@ -112,6 +122,85 @@ export const ExportData = ({ jobs }: ExportDataProps) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+  const exportToPDF = (data: JobApplication[]) => {
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(20);
+      doc.text('Job Application Tracker Report', 20, 20);
+      
+      // Add generation date
+      doc.setFontSize(12);
+      doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 35);
+      doc.text(`Date Range: ${dateRange === 'all' ? 'All time' : dateRange}`, 20, 45);
+      
+      // Calculate statistics
+      const stats = {
+        total: data.length,
+        applied: data.filter(j => j.status === 'Applied').length,
+        interview: data.filter(j => j.status === 'Interview').length,
+        offer: data.filter(j => j.status === 'Offer').length,
+        accepted: data.filter(j => j.status === 'Accepted').length,
+        rejected: data.filter(j => j.status === 'Rejected').length
+      };
+      
+      // Add summary statistics
+      doc.setFontSize(16);
+      doc.text('Summary Statistics', 20, 65);
+      doc.setFontSize(11);
+      doc.text(`Total Applications: ${stats.total}`, 20, 80);
+      doc.text(`Applied: ${stats.applied}`, 20, 90);
+      doc.text(`Interview Stage: ${stats.interview}`, 20, 100);
+      doc.text(`Offers Received: ${stats.offer}`, 20, 110);
+      doc.text(`Accepted: ${stats.accepted}`, 20, 120);
+      doc.text(`Rejected: ${stats.rejected}`, 20, 130);
+      
+      // Add success rates
+      const interviewRate = stats.total > 0 ? ((stats.interview / stats.total) * 100).toFixed(1) : '0';
+      const successRate = stats.total > 0 ? (((stats.offer + stats.accepted) / stats.total) * 100).toFixed(1) : '0';
+      doc.text(`Interview Rate: ${interviewRate}%`, 120, 80);
+      doc.text(`Success Rate: ${successRate}%`, 120, 90);
+      
+      // Prepare table data with error handling
+      const tableColumns = ['Company', 'Role', 'Status', 'Applied Date', 'Location'];
+      const tableRows = data.map(job => [
+        job.company || 'N/A',
+        job.role || 'N/A',
+        job.status || 'N/A',
+        job.applied_date ? new Date(job.applied_date).toLocaleDateString() : 'N/A',
+        job.location || 'N/A'
+      ]);      // Add table using autoTable with error handling
+      if (typeof (doc as jsPDF & { autoTable?: (options: AutoTableOptions) => void }).autoTable === 'function') {
+        (doc as jsPDF & { autoTable: (options: AutoTableOptions) => void }).autoTable({
+          head: [tableColumns],
+          body: tableRows,
+          startY: 150,
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [41, 128, 185] },
+          columnStyles: {
+            0: { cellWidth: 40 },
+            1: { cellWidth: 45 },
+            2: { cellWidth: 25 },
+            3: { cellWidth: 30 },
+            4: { cellWidth: 35 }
+          }
+        });
+      } else {        // Fallback if autoTable is not available
+        const yPos = 150;
+        tableRows.forEach((row, index) => {
+          doc.text(row.join(' | '), 20, yPos + (index * 10));
+        });
+      }
+      
+      // Save the PDF
+      const fileName = `job-applications-report-${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw new Error('Failed to generate PDF report');
+    }
   };
 
   const generateReport = (data: JobApplication[]) => {
@@ -145,7 +234,7 @@ DETAILED APPLICATIONS:
 ${data.map((job, index) => `
 ${index + 1}. ${job.company} - ${job.role}
    Status: ${job.status}
-   Applied: ${new Date(job.appliedDate).toLocaleDateString()}
+   Applied: ${new Date(job.applied_date).toLocaleDateString()}
    Location: ${job.location || 'Not specified'}
    Salary: ${job.salary || 'Not specified'}
    Notes: ${job.notes || 'No notes'}
@@ -174,8 +263,7 @@ ${index + 1}. ${job.company} - ${job.role}
       return;
     }
 
-    try {
-      switch (exportFormat) {
+    try {      switch (exportFormat) {
         case 'csv':
           exportToCSV(filteredJobs);
           break;
@@ -183,7 +271,7 @@ ${index + 1}. ${job.company} - ${job.role}
           exportToJSON(filteredJobs);
           break;
         case 'pdf':
-          generateReport(filteredJobs);
+          exportToPDF(filteredJobs);
           break;
       }
 
@@ -196,17 +284,7 @@ ${index + 1}. ${job.company} - ${job.role}
         title: "Export failed",
         description: "There was an error exporting your data.",
         variant: "destructive"
-      });
-    }
-  };
-
-  const getFormatIcon = (format: string) => {
-    switch (format) {
-      case 'csv': return <Table className="h-4 w-4" />;
-      case 'json': return <FileText className="h-4 w-4" />;
-      case 'pdf': return <FileText className="h-4 w-4" />;
-      default: return <Download className="h-4 w-4" />;
-    }
+      });    }
   };
 
   const filteredCount = filterJobsByDate(jobs, dateRange).length;
@@ -225,13 +303,9 @@ ${index + 1}. ${job.company} - ${job.role}
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm font-medium mb-2 block">Export Format</label>
-            <Select value={exportFormat} onValueChange={(value: 'csv' | 'json' | 'pdf') => setExportFormat(value)}>
+            <label className="text-sm font-medium mb-2 block">Export Format</label>            <Select value={exportFormat} onValueChange={(value: 'csv' | 'json' | 'pdf') => setExportFormat(value)}>
               <SelectTrigger>
-                <div className="flex items-center">
-                  {getFormatIcon(exportFormat)}
-                  <SelectValue />
-                </div>
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="csv">
@@ -245,11 +319,10 @@ ${index + 1}. ${job.company} - ${job.role}
                     <FileText className="h-4 w-4 mr-2" />
                     JSON Data
                   </div>
-                </SelectItem>
-                <SelectItem value="pdf">
+                </SelectItem>                <SelectItem value="pdf">
                   <div className="flex items-center">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Text Report
+                    <File className="h-4 w-4 mr-2" />
+                    PDF Report
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -286,12 +359,10 @@ ${index + 1}. ${job.company} - ${job.role}
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
-        </div>
-
-        <div className="text-xs text-gray-500 space-y-1">
+        </div>        <div className="text-xs text-gray-500 space-y-1">
           <p><strong>CSV:</strong> Perfect for Excel/Google Sheets analysis</p>
           <p><strong>JSON:</strong> Structured data for technical use</p>
-          <p><strong>Report:</strong> Human-readable summary with statistics</p>
+          <p><strong>PDF Report:</strong> Professional report with statistics and data table</p>
         </div>
       </CardContent>
     </Card>

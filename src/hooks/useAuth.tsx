@@ -32,7 +32,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [userRole, setUserRole] = useState<'admin' | 'applicant' | null>(null);
   const [loading, setLoading] = useState(true);
-
   const fetchUserRole = async (userId: string) => {
     try {
       const { data, error } = await supabase
@@ -42,8 +41,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .single();
       
       if (error) {
+        // If no role exists, create one for the user
+        if (error.code === 'PGRST116') {
+          console.log('No role found, creating default role...');
+          const { data: newRole, error: insertError } = await supabase
+            .from('user_roles')
+            .insert({ user_id: userId, role: 'applicant' })
+            .select('role')
+            .single();
+          
+          if (insertError) {
+            console.error('Error creating user role:', insertError);
+            return 'applicant';
+          }
+          
+          return newRole?.role || 'applicant';
+        }
         console.error('Error fetching user role:', error);
-        return null;
+        return 'applicant';
       }
       
       return data?.role || 'applicant';

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -166,13 +165,12 @@ export const useJobApplications = () => {
       fetchJobApplications();
     }
   }, [user, userRole]);
-
   // Set up real-time subscription
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
-      .channel('job_applications_changes')
+      .channel(`job_applications_changes_${user.id}`)
       .on(
         'postgres_changes',
         {

@@ -1,4 +1,3 @@
-
 -- Create job applications table
 CREATE TABLE public.job_applications (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -71,6 +70,12 @@ CREATE POLICY "Users can view their own role"
   FOR SELECT 
   USING (auth.uid() = user_id);
 
+-- Allow users to insert their own role (needed for auto role creation)
+CREATE POLICY "Users can insert their own role" 
+  ON public.user_roles 
+  FOR INSERT 
+  WITH CHECK (auth.uid() = user_id);
+
 -- Admin policies for job applications (admins can see all)
 CREATE POLICY "Admins can view all job applications" 
   ON public.job_applications 
@@ -100,9 +105,10 @@ BEGIN
 END;
 $$;
 
-CREATE TRIGGER on_auth_user_created_role
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_role();
+CREATE TRIGGER assign_user_role
+AFTER INSERT ON auth.users
+FOR EACH ROW
+EXECUTE FUNCTION public.handle_new_user_role();
 
 -- Create notifications table for real-time notifications
 CREATE TABLE public.notifications (
@@ -128,6 +134,11 @@ CREATE POLICY "Users can update their own notifications"
   ON public.notifications 
   FOR UPDATE 
   USING (auth.uid() = user_id);
+
+CREATE POLICY "System can create notifications for users" 
+  ON public.notifications 
+  FOR INSERT 
+  WITH CHECK (true);
 
 -- Enable realtime for notifications and job applications
 ALTER TABLE public.notifications REPLICA IDENTITY FULL;

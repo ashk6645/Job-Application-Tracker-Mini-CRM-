@@ -12,8 +12,8 @@ interface JobApplication {
   company: string;
   role: string;
   status: JobStatus;
-  appliedDate: string;
-  notes: string;
+  applied_date: string;
+  notes?: string;
   location?: string;
   salary?: string;
   type?: string;
@@ -38,7 +38,7 @@ export const AnalyticsDashboard = ({ jobs }: AnalyticsDashboardProps) => {
     // Activity over time
     const last30Days = new Date();
     last30Days.setDate(last30Days.getDate() - 30);
-    const recentApplications = jobs.filter(job => new Date(job.appliedDate) >= last30Days).length;
+    const recentApplications = jobs.filter(job => new Date(job.applied_date) >= last30Days).length;
 
     // Most active companies
     const companyCounts = jobs.reduce((acc, job) => {

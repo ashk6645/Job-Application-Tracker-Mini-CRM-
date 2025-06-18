@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +14,7 @@ interface JobApplicationModalProps {
   job: JobApplication | null;
   isOpen: boolean;
   onClose: () => void;
-  onUpdate: (id: string, updates: Partial<JobApplication>) => Promise<any>;
+  onUpdate: (id: string, updates: Partial<JobApplication>) => Promise<JobApplication>;
   onDelete: (jobId: string) => Promise<void>;
   mode: 'view' | 'edit';
 }
@@ -24,6 +23,12 @@ export const JobApplicationModal = ({ job, isOpen, onClose, onUpdate, onDelete, 
   const [isEditing, setIsEditing] = useState(mode === 'edit');
   const [editedJob, setEditedJob] = useState<JobApplication | null>(job);
   const { toast } = useToast();
+
+  // Update editedJob when job prop changes
+  useEffect(() => {
+    setEditedJob(job);
+    setIsEditing(mode === 'edit');
+  }, [job, mode]);
 
   const statusColors = {
     'Applied': 'bg-blue-100 text-blue-800 border-blue-200',

@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from 'react';
 import { BarChart3, Bell, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,11 +13,13 @@ import { ApplicationsGrid } from '@/components/dashboard/ApplicationsGrid';
 import { AddJobDialog } from '@/components/dashboard/AddJobDialog';
 import { useJobApplications, type JobApplication } from '@/hooks/useJobApplications';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotifications } from '@/hooks/useNotifications';
 import Navbar from '@/components/Navbar';
 
 const Index = () => {
   const { jobs, loading, addJobApplication, updateJobApplication, deleteJobApplication } = useJobApplications();
   const { userRole } = useAuth();
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<string>('date-desc');
@@ -27,9 +28,8 @@ const Index = () => {
   const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view');
   const [activeTab, setActiveTab] = useState('overview');
-
   const filteredAndSortedJobs = useMemo(() => {
-    let filtered = jobs.filter(job => {
+    const filtered = jobs.filter(job => {
       const matchesSearch = 
         job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
         job.role.toLowerCase().includes(searchQuery.toLowerCase());
@@ -100,28 +100,20 @@ const Index = () => {
               Admin Dashboard
             </Button>
           )}
-        </div>
-
-        {/* Navigation Tabs */}
+        </div>        {/* Navigation Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-8">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Dashboard</TabsTrigger>
+            <TabsTrigger value="applications">Applications</TabsTrigger>
             <TabsTrigger value="analytics">
               <BarChart3 className="h-4 w-4 mr-2" />
               Analytics
-            </TabsTrigger>
-            <TabsTrigger value="reminders">
-              <Bell className="h-4 w-4 mr-2" />
-              Reminders
             </TabsTrigger>
             <TabsTrigger value="export">
               <Download className="h-4 w-4 mr-2" />
               Export
             </TabsTrigger>
-            <TabsTrigger value="applications">Applications</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-8">
+          </TabsList>          <TabsContent value="overview" className="space-y-8">
             <StatsCards jobs={jobs} />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <ReminderSystem jobs={jobs} onUpdateJob={handleUpdateJob} />
@@ -131,18 +123,6 @@ const Index = () => {
                 onExportData={() => setActiveTab('export')}
               />
             </div>
-          </TabsContent>
-
-          <TabsContent value="analytics">
-            <AnalyticsDashboard jobs={jobs} />
-          </TabsContent>
-
-          <TabsContent value="reminders">
-            <ReminderSystem jobs={jobs} onUpdateJob={handleUpdateJob} />
-          </TabsContent>
-
-          <TabsContent value="export">
-            <ExportData jobs={jobs} />
           </TabsContent>
 
           <TabsContent value="applications" className="space-y-8">
@@ -159,6 +139,14 @@ const Index = () => {
               jobs={filteredAndSortedJobs}
               onViewJob={handleViewJob}
             />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <AnalyticsDashboard jobs={jobs} />
+          </TabsContent>
+
+          <TabsContent value="export">
+            <ExportData jobs={jobs} />
           </TabsContent>
         </Tabs>
 

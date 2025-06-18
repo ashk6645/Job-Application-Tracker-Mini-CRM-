@@ -1,24 +1,65 @@
-
-# 🚀 Job Application Tracker
+# 🚀 Job Application Tracker (Mini CRM)
 
 A comprehensive full-stack web application built with modern technologies to help job seekers efficiently manage their job applications with real-time notifications, analytics, and admin capabilities.
+
+**Assignment Task 4: Job Application Tracker (Mini CRM)**
 
 ## 🌟 Live Demo
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-View%20App-blue?style=for-the-badge)](https://job-application-tracker-mini-crm.vercel.app/auth)
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=for-the-badge&logo=github)](https://github.com/ashk6645/Job-Application-Tracker-Mini-CRM-)
 
+## ✅ Core Features Implementation
+
+### 1. User Authentication
+- ✅ **JWT Login/Signup** via Supabase Auth
+- ✅ **Applicant Panel** - Users can manage their own applications
+- ✅ **Admin Panel** - Admins can view and manage all applications
+- ✅ Role-based access control (Admin/Applicant)
+
+### 2. Job Entry CRUD Operations
+- ✅ **Add Job Application** - Company, role, status, applied date, notes
+- ✅ **Edit Applications** - Update any field including status
+- ✅ **Delete Applications** - Remove applications
+- ✅ **View Details** - Comprehensive view with all information
+- ✅ **Status Management** - "Applied", "Interview", "Offer", "Rejected", "Accepted"
+
+### 3. List View with Filters
+- ✅ **List All Jobs** - Card and table format display
+- ✅ **Filter by Status** - All statuses supported
+- ✅ **Sort by Applied Date** - Ascending/Descending
+- ✅ **Search Functionality** - Search by company and role
+- ✅ **Responsive UI** - Works on all devices
+
+### 4. Backend Implementation
+- ✅ **REST API** - Full CRUD operations via Supabase
+- ✅ **PostgreSQL Database** - Robust data storage
+- ✅ **Real-time Subscriptions** - Live updates via Supabase Realtime
+- ✅ **Row Level Security** - Secure data access
+
+### 5. Frontend Implementation
+- ✅ **Responsive UI** - Modern, mobile-first design
+- ✅ **Form Validation** - Required fields and data validation
+- ✅ **Card/Table Display** - Multiple view formats
+- ✅ **Loading States** - User-friendly loading indicators
+
+### 6. Real-Time Notifications ⭐
+- ✅ **Panel Notifications** - Real-time in-app notifications
+- ✅ **Application Status Changes** - Instant notifications
+- ✅ **New Application Alerts** - Immediate feedback
+- ✅ **WebSocket Integration** - Real-time data synchronization
+- ✅ **Toast Messages** - User-friendly notification system
+
 ## 📋 Table of Contents
 
-- [Features](#features)
 - [Getting Started](#getting-started)
-- [API Documentation](#api-documentation)
-- [Database Schema](#database-schema)
+- [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
+- [API Documentation](#api-documentation)
+- [Database Schema](#database-schema)
 - [Security](#security)
 - [Performance](#performance)
-- [Contributing](#contributing)
 
 ## 🚀 Getting Started
 
@@ -153,7 +194,7 @@ supabase
 
 ### 🔔 Real-time Notifications
 - **Live Updates** using Supabase Realtime
-- **Email Notifications** for status changes
+- **Real-time Panel Notifications** for status changes
 - **In-app Notification System** with toast messages
 - **Follow-up Reminders** and deadline tracking
 

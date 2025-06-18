@@ -1,5 +1,4 @@
-
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,17 +12,17 @@ interface JobApplication {
   company: string;
   role: string;
   status: JobStatus;
-  appliedDate: string;
-  notes: string;
+  applied_date: string;
+  notes?: string;
   location?: string;
   salary?: string;
   type?: string;
-  followUpDate?: string;
+  follow_up_date?: string;
 }
 
 interface ReminderSystemProps {
   jobs: JobApplication[];
-  onUpdateJob: (updatedJob: JobApplication) => void;
+  onUpdateJob: (id: string, updates: Partial<JobApplication>) => Promise<void>;
 }
 
 interface Reminder {
@@ -37,18 +36,40 @@ interface Reminder {
 
 export const ReminderSystem = ({ jobs, onUpdateJob }: ReminderSystemProps) => {
   const { toast } = useToast();
+  
+  // Use localStorage to persist completed reminders across re-renders
+  const [completedReminders, setCompletedReminders] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('completedReminders');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  // Save to localStorage whenever completedReminders changes
+  const markReminderComplete = (reminderId: string) => {
+    const newCompleted = new Set([...completedReminders, reminderId]);
+    setCompletedReminders(newCompleted);
+    localStorage.setItem('completedReminders', JSON.stringify([...newCompleted]));
+  };
+
+  // Clean up old completed reminders from localStorage (older than 30 days)
+  const cleanupOldCompletedReminders = () => {
+    const oneMonthAgo = new Date();
+    oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+    
+    // For now, we'll just clear all if there are too many (> 100)
+    // In a real app, you'd store timestamps with each completion
+    if (completedReminders.size > 100) {
+      localStorage.removeItem('completedReminders');
+      setCompletedReminders(new Set());
+    }  };
 
   const reminders = useMemo(() => {
     const today = new Date();
     const reminderList: Reminder[] = [];
 
-    jobs.forEach(job => {
-      const appliedDate = new Date(job.appliedDate);
-      const daysSinceApplied = Math.floor((today.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24));
-
-      // Follow-up reminders
-      if (job.followUpDate) {
-        const followUpDate = new Date(job.followUpDate);
+    jobs.forEach(job => {      const appliedDate = new Date(job.applied_date);
+      const daysSinceApplied = Math.floor((today.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24));// Follow-up reminders
+      if (job.follow_up_date) {
+        const followUpDate = new Date(job.follow_up_date);
         const daysUntilFollowUp = Math.floor((followUpDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         
         if (daysUntilFollowUp <= 0 && job.status !== 'Rejected' && job.status !== 'Accepted') {
@@ -57,14 +78,12 @@ export const ReminderSystem = ({ jobs, onUpdateJob }: ReminderSystemProps) => {
             type: 'follow-up',
             priority: 'high',
             message: `Follow up with ${job.company} about ${job.role}`,
-            dueDate: job.followUpDate,
+            dueDate: job.follow_up_date,
             job
           });
         }
-      }
-
-      // Stale application reminders
-      if (job.status === 'Applied' && daysSinceApplied >= 14) {
+      }      // Stale application reminders (only if not already addressed)
+      if (job.status === 'Applied' && daysSinceApplied >= 14 && !(job.notes || '').includes('[STALE_ADDRESSED:')) {
         reminderList.push({
           id: `stale-${job.id}`,
           type: 'stale-application',
@@ -73,10 +92,8 @@ export const ReminderSystem = ({ jobs, onUpdateJob }: ReminderSystemProps) => {
           dueDate: today.toISOString(),
           job
         });
-      }
-
-      // Interview preparation reminders
-      if (job.status === 'Interview') {
+      }      // Interview preparation reminders (only if not already completed)
+      if (job.status === 'Interview' && !(job.notes || '').includes('[PREP_COMPLETED:')) {
         reminderList.push({
           id: `prep-${job.id}`,
           type: 'interview-prep',
@@ -86,42 +103,51 @@ export const ReminderSystem = ({ jobs, onUpdateJob }: ReminderSystemProps) => {
           job
         });
       }
-    });
-
-    return reminderList.sort((a, b) => {
-      const priorityOrder = { high: 3, medium: 2, low: 1 };
-      return priorityOrder[b.priority] - priorityOrder[a.priority];
-    });
-  }, [jobs]);
-
-  const handleMarkComplete = (reminder: Reminder) => {
-    if (reminder.type === 'follow-up' && reminder.job.followUpDate) {
-      // Set next follow-up date
+    });    return reminderList
+      .filter(reminder => !completedReminders.has(reminder.id))
+      .sort((a, b) => {
+        const priorityOrder = { high: 3, medium: 2, low: 1 };
+        return priorityOrder[b.priority] - priorityOrder[a.priority];
+      });
+  }, [jobs, completedReminders]);  const handleMarkComplete = async (reminder: Reminder) => {
+    // Mark reminder as completed first (this will remove it from the list immediately)
+    markReminderComplete(reminder.id);
+    
+    if (reminder.type === 'follow-up' && reminder.job.follow_up_date) {
+      // Set next follow-up date - this will change the reminder ID for future reminders
       const nextFollowUp = new Date();
       nextFollowUp.setDate(nextFollowUp.getDate() + 7);
       
-      const updatedJob = {
-        ...reminder.job,
-        followUpDate: nextFollowUp.toISOString().split('T')[0],
-        notes: reminder.job.notes + `\n[${new Date().toLocaleDateString()}] Followed up with company.`
+      const updates = {
+        follow_up_date: nextFollowUp.toISOString().split('T')[0],
+        notes: (reminder.job.notes || '') + `\n[${new Date().toLocaleDateString()}] Followed up with company.`
       };
       
-      onUpdateJob(updatedJob);
+      await onUpdateJob(reminder.job.id, updates);
       toast({
         title: "Follow-up completed!",
-        description: "Next follow-up scheduled for next week."
+        description: "Reminder removed. Next follow-up scheduled for next week."
       });
     } else if (reminder.type === 'stale-application') {
-      // Update to add follow-up note
-      const updatedJob = {
-        ...reminder.job,
-        notes: reminder.job.notes + `\n[${new Date().toLocaleDateString()}] Addressed stale application.`
+      // For stale applications, add a special flag to prevent re-creation
+      const updates = {
+        notes: (reminder.job.notes || '') + `\n[${new Date().toLocaleDateString()}] Addressed stale application - reviewed and updated.\n[STALE_ADDRESSED:${new Date().toISOString()}]`
       };
       
-      onUpdateJob(updatedJob);
+      await onUpdateJob(reminder.job.id, updates);
       toast({
-        title: "Reminder addressed!",
-        description: "Application noted as reviewed."
+        title: "Reminder completed!",
+        description: "Stale application reminder has been marked as done and removed."
+      });    } else if (reminder.type === 'interview-prep') {
+      // For interview prep, add a special flag to prevent re-creation
+      const updates = {
+        notes: (reminder.job.notes || '') + `\n[${new Date().toLocaleDateString()}] Interview preparation completed.\n[PREP_COMPLETED:${new Date().toISOString()}]`
+      };
+      
+      await onUpdateJob(reminder.job.id, updates);
+      toast({
+        title: "Interview prep completed!",
+        description: "Reminder removed. Good luck with your interview!"
       });
     }
   };
@@ -170,7 +196,10 @@ export const ReminderSystem = ({ jobs, onUpdateJob }: ReminderSystemProps) => {
         ) : (
           <div className="space-y-3">
             {reminders.map((reminder) => (
-              <div key={reminder.id} className="flex items-start justify-between p-3 border rounded-lg">
+              <div 
+                key={reminder.id} 
+                className="flex items-start justify-between p-3 border rounded-lg hover:shadow-md transition-all duration-200"
+              >
                 <div className="flex items-start space-x-3">
                   <div className="flex-shrink-0 mt-1">
                     {getReminderIcon(reminder.type)}

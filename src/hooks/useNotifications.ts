@@ -1,7 +1,7 @@
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 
 interface Notification {
   id: string;
@@ -17,8 +17,9 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
+  const { toast } = useToast();
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -36,7 +37,7 @@ export const useNotifications = () => {
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
-  };
+  }, [user]);
 
   const markAsRead = async (notificationId: string) => {
     try {
@@ -75,45 +76,56 @@ export const useNotifications = () => {
     }
   };
 
+  const addNotification = useCallback(async (
+    title: string,
+    message: string,
+    type: string
+  ) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          title,
+          message,
+          type,
+          read: false
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Show toast notification immediately
+      toast({
+        title,
+        description: message,
+        duration: 5000,
+      });
+
+      // Update local state immediately
+      setNotifications(prev => [data, ...prev]);
+      setUnreadCount(prev => prev + 1);
+    } catch (error) {
+      console.error('Error adding notification:', error);
+    }
+  }, [user, toast]);
+
+  // Only fetch notifications on mount and user change - NO real-time subscriptions here
   useEffect(() => {
     if (user) {
       fetchNotifications();
     }
-  }, [user]);
-
-  // Set up real-time subscription for notifications
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('notifications_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('New notification:', payload);
-          const newNotification = payload.new as Notification;
-          setNotifications(prev => [newNotification, ...prev.slice(0, 9)]);
-          setUnreadCount(prev => prev + 1);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
+  }, [user, fetchNotifications]);
 
   return {
     notifications,
     unreadCount,
     markAsRead,
     markAllAsRead,
-    refetch: fetchNotifications
+    addNotification,
+    fetchNotifications
   };
 };
